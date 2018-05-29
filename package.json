@@ -1,6 +1,6 @@
 {
   "name": "mary-markov",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Perform a series of probability calculations with Markov Chains and Hidden Markov Models.",
   "main": "index.js",
   "scripts": {
