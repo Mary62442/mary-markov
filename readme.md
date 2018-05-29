@@ -6,11 +6,11 @@
 
 ## Markov Chain
 
-A simple Markov Chain requires states, transition probabilities, initial probabilities and a state sequence.
+A simple Markov Chain requires states, transition probabilities and initial probabilities.
 
 The states array must be an array of objects with the properties state and prob.
 
-The prob property is an array representing the corresponding line of the matrix of the state.
+The prob property is an array representing the corresponding line of the matrix of the states' transition probabilities.
 
 For example, given a series of states **S = { 'sunny', 'cloudy', 'rainy'}** the transition matrix would be: 
 
@@ -34,18 +34,15 @@ Therefore, in this example, 0.4 is the sunny probability, 0.3 is the cloudy prob
 
 	let init = [0.4, 0.3, 0.3];
 
-The state sequence is an array of states which will be used to calculate sequence probability.  
+To instantiate the Markov Chain we pass the states, and the initial probabilities as parameters of the MarkovChain function.
 
-	let stateSeq = ['sunny', 'rainy', 'sunny', 'sunny', 'cloudy'];
-
-To instantiate the Markov Chain we pass the states, the initial probabilities and the state sequence as parameters of the MarkovChain function.
-
-	let markovChain = markov.MarkovChain(states, init, stateSeq);
+	let markovChain = markov.MarkovChain(states, init);
 
 ### Markov Chain sequence probability
-To then calculate the sequence probability we call the sequenceProb() function on the object just instantiated.
+To then calculate the probability of a state sequence we call the sequenceProb() function on the object just instantiated, and we pass a state sequence array.
 
-	let seqProbability = markovChain.sequenceProb(); //0.002560000000000001
+	let stateSeq = ['sunny', 'rainy', 'sunny', 'sunny', 'cloudy'];
+	let seqProbability = markovChain.sequenceProb(stateSeq); //0.002560000000000001
 
 ### Markov Chain properties
 |Property | Description|
@@ -53,8 +50,6 @@ To then calculate the sequence probability we call the sequenceProb() function o
 |states | Array of the names of the states|
 |transMatrix | Array of arrays representing thetransition probabilities|
 |initialProb | Array of initial probabilities|
-|sequence | Sequence array of the input|
-|sequenceArr | Index representation of the sequence array compared to the states array|
 
 Example:
 

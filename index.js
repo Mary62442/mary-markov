@@ -10,9 +10,9 @@ const findIndex = (arr, el) => {
     return arr.indexOf(el);
 };
 
-const calculateProb = (stateTrans2, init, sequenceArr) => ({
-    sequenceProb : () => {
-        return sequenceArr
+const calculateProb = (stateTrans2, init, states) => ({
+    sequenceProb : (sequence) => {
+        return findSequence(sequence, states) 
         .reduce((total, curr, i, arr) => {   
         if (i === 0) total += init[curr];    
         else  total *= stateTrans2[arr[i-1]][curr];         
@@ -124,15 +124,13 @@ const Viterbi = (hmm) => ({
     }
 });
 
-const MarkovChain = (states, init, sequence) => {
+const MarkovChain = (states, init) => {
     let info = {  
         states: states.map(s => s.state),    
         transMatrix : states.map(s => s.prob),   
-        initialProb : init,         
-        sequence,
-        sequenceArr : findSequence(sequence, states) 
+        initialProb : init  
     }     
-    return Object.assign({}, info, calculateProb(info.transMatrix, init, info.sequenceArr))
+    return Object.assign({}, info, calculateProb(info.transMatrix, init, states))
 };
 
 const HMM = (states, observables, init) => {
