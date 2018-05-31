@@ -2,7 +2,7 @@
 
 ## An npm package to calculate probabilities from Markov Chains and Hidden Markov Models
   
-`const markov = require('mary-markov');`  
+	const maryMarkov = require('mary-markov');  
 
 ## Markov Chain
 
@@ -36,7 +36,7 @@ Therefore, in this example, 0.4 is the sunny probability, 0.3 is the cloudy prob
 
 To instantiate the Markov Chain we pass the states, and the initial probabilities as parameters of the MarkovChain function.
 
-	let markovChain = markov.MarkovChain(states, init);
+	let markovChain = maryMarkov.MarkovChain(states, init);
 
 ### Markov Chain sequence probability
 To then calculate the probability of a state sequence we call the sequenceProb() function on the object just instantiated, and we pass a state sequence array.
@@ -56,7 +56,6 @@ Example:
     console.log(markovChain.transMatrix) // [ [ 0.4, 0.4, 0.2 ], [ 0.3, 0.3, 0.4 ], [ 0.2, 0.5, 0.3 ] ]
 
    
-
 ## Hidden Markov Model
 
 A Hidden Markov Model requires hidden states, transition probabilities, observables, emission probabilities, and initial probabilities.
@@ -108,24 +107,33 @@ In this example, 0.65 is the AT-rich probability, and the final 0.35 is the CG-r
 
 To instantiate the Hidden Markov Model we pass the states, the observables and the initial probabilities as parameters of the HMM function.
 
-	let HMModel = markov.HMM(hiddenStates, observables, hiddenInit);
+	let HMModel = maryMarkov.HMM(hiddenStates, observables, hiddenInit);
 
-### Hidden Markov Model Bayes Theorem
+### Hidden Markov Model: Bayes Theorem
 
 To calculate the probability of a specific hidden state given an observable we can call the bayesTheorem() function and pass two parameters: the observable and the hidden state of which we want to know the probability.  
 
 	let observation = 'A';
 	let hiddenState = 'AT-rich';
 	let bayesResult = HMModel.bayesTheorem(observation, hiddenState); //0.9369369369369369
+
+### Hidden Markov Model: Forward Algorithm (Problem 1: Likelihood)
+
+To find the probability of an observation sequence given a model we use the forwardAlgorithm() function and pass the observable sequence as parameter.
+
+	let obSequence = ['T','C','G','G','A']; 
+    let forwardProbability = HMModel.forwardAlgorithm(obSequence);
+	console.log(forwardProbability); // 0.3232453919921875
+
   
-### Hidden Markov Model Viterbi Algorithm
+### Hidden Markov Model: Viterbi Algorithm (Problem 2: Decoding)
 
 To calculate the most likely sequence of hidden states given a specific sequence of observables we can call the viterbiAlgorithm() function and pass it the observable sequence.
 
-    let obSequence = ['A','T','C', 'G', 'C', 'G','T','C','A','T','C', 'G','T','C', 'G','T','C','C', 'G']; 
+    let obSequence = ['A', 'T', 'C', 'G', 'C', 'G', 'T', 'C', 'A', 'T', 'C', 'G', 'T', 'C', 'G', 'T', 'C', 'C', 'G']; 
     let viterbiResult = HMModel.viterbiAlgorithm(obSequence);
 
-The viterbiAlgorithm() returns an object with the following properties:
+The viterbiAlgorithm() function returns an object with the following properties:
 
 * states : the array of the hidden state sequence found
 
@@ -136,6 +144,7 @@ The viterbiAlgorithm() returns an object with the following properties:
 So, 
 
     console.log(viterbiResult.states) //[ 'AT-rich', 'AT-rich', 'AT-rich', 'AT-rich', 'CG-rich', 'CG-rich', ... ] 
+
 
 ### Hidden Markov Model properties
 
@@ -150,3 +159,5 @@ So,
 Example:
 
     console.log(HMModel.transMatrix) // [ [ 0.95, 0.05 ], [ 0.1, 0.9 ] ]
+
+
