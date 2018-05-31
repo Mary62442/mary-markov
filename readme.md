@@ -64,7 +64,7 @@ A Hidden Markov Model requires hidden states, transition probabilities, observab
 For example, given a series of states **S = { 'AT-rich', 'CG-rich'}** the transition matrix would look like this:
 
 		| 0.95 0.05	|
-	A =	|		  	|
+	A =	|          	|
 		| 0.1  0.9	|
 (represents the transition probabilities between AT-rich and CG-rich segments in a DNA sequence)
 
@@ -81,13 +81,13 @@ The prob property is the array representing the corresponding line of the matrix
 
 
 The observables array is similar to the hiddenStates array.
-Given a series of observables **O = { 'A', 'T', 'C', 'G' }** the emission probabilities would be represented in the matrix:
+Given a series of observables **O = { 'A', 'C', 'G', 'T' }** the emission probabilities would be represented in the matrix:
 
 		| 0.4  0.1 0.1 0.4 	|
-	B =	| 				  	|
+	B =	|                  	|
 		| 0.05 0.4 0.4 0.05	|
 
-(represents the emission probabilities of the observables A, T, C, G given the hidden states AT-rich and CG-rich)
+(represents the emission probabilities of the observables A, C, G, T given the hidden states AT-rich and CG-rich)
 
 In the program the observables would be instantiated as:
 
