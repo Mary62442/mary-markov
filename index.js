@@ -73,9 +73,42 @@ const Forward = (hmm) => ({
     },
 
     termForward : function(alphas) {
-        return alphas
-        .reduce((mainArr, alphaArr) => mainArr.concat(alphaArr),[])
+        return alphas[alphas.length-1]        
         .reduce((tot,val) => tot+val);
+    }
+});
+
+const Backward = (hmm) => ({
+    backwardAlgorithm : function(obSequence) {
+        let initBetas = hmm.states.map(s => 1);
+        let allBetas = this.recBackward(obSequence, initBetas, obSequence.length-1, [initBetas]);
+        return this.termBackward(obSequence, allBetas);
+    },   
+    recBackward : function(obSequence, prevBetas, i, betas) {   
+        let obIndex = i;        
+        if (obIndex === 0) return betas;             
+        let nextTrellis = [];
+        for (let s = 0; s < hmm.states.length; s++) {
+            let trellisArr = [];
+            prevBetas.forEach((prob, i) => {
+                let trans = hmm.transMatrix[s][i];
+                let emiss = hmm.emissionMatrix[findIndex(hmm.observables, obSequence[obIndex])][i];                
+                trellisArr.push(prob*trans*emiss);
+            });              
+            nextTrellis.push(trellisArr.reduce((tot,curr) => tot+curr));
+        };      
+        betas.push(nextTrellis);
+        return this.recBackward(obSequence, nextTrellis, obIndex-1, betas);
+    },
+
+    termBackward : function(obSequence, betas) {
+        let finalBetas = betas[betas.length-1].reduce((tot,curr,i) => {
+            let obIndex = findIndex(hmm.observables, obSequence[0]);
+            let obEmission = hmm.emissionMatrix[obIndex];  
+            tot.push(curr*hmm.initialProb[i]*obEmission[i]);
+            return tot;
+        },[]);
+        return finalBetas.reduce((tot,val) => tot+val);
     }
 });
 
@@ -184,7 +217,7 @@ const HMM = (states, observables, init) => {
         observables : observables.map( o => o.obs ),
         emissionMatrix : observables.map(o => o.prob)     
     }     
-    return Object.assign({}, hmm, Bayes(hmm), Viterbi(hmm), Forward(hmm))
+    return Object.assign({}, hmm, Bayes(hmm), Viterbi(hmm), Forward(hmm), Backward(hmm))
 };
 
 exports.MarkovChain = MarkovChain;

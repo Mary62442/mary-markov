@@ -117,13 +117,17 @@ To calculate the probability of a specific hidden state given an observable we c
 	let hiddenState = 'AT-rich';
 	let bayesResult = HMModel.bayesTheorem(observation, hiddenState); //0.9369369369369369
 
-### Hidden Markov Model: Forward Algorithm (Problem 1: Likelihood)
+### Hidden Markov Model: Forward Algorithm and Backward Algorithm (Problem 1: Likelihood)
 
-To find the probability of an observation sequence given a model we use the forwardAlgorithm() function and pass the observable sequence as parameter.
+To find the probability of an observation sequence given a model we can use either the forwardAlgorithm() function or the backwardAlgorithm() function and pass the observable sequence as parameter.
 
 	let obSequence = ['T','C','G','G','A']; 
+
     let forwardProbability = HMModel.forwardAlgorithm(obSequence);
-	console.log(forwardProbability); // 0.3232453919921875
+	console.log(forwardProbability); // 0.00025390761718750005
+
+	let backwardProbability = HMModel.backwardAlgorithm(obSequence);
+	console.log(backwardProbability); // 0.00025390761718750001
 
   
 ### Hidden Markov Model: Viterbi Algorithm (Problem 2: Decoding)
