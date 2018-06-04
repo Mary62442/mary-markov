@@ -129,6 +129,8 @@ The backwardAlgorithm() function returns an object with:
 * betas : an array of arrays representing every forward probability of each state at every step of the sequence from end to start
 * betaF : the final value of the Backward probability
 
+So,
+
 	let obSequence = ['T','C','G','G','A']; 
 
     let forwardProbability = HMModel.forwardAlgorithm(obSequence);
