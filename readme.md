@@ -121,13 +121,21 @@ To calculate the probability of a specific hidden state given an observable we c
 
 To find the probability of an observation sequence given a model we can use either the forwardAlgorithm() function or the backwardAlgorithm() function and pass the observable sequence as parameter.
 
+The forwardAlgorithm() function returns an object with:
+* alphas : an array of arrays representing every forward probability of each state at every step of the sequence from start to end
+* alphaF : the final value of the Forward probability
+
+The backwardAlgorithm() function returns an object with:
+* betas : an array of arrays representing every forward probability of each state at every step of the sequence from end to start
+* betaF : the final value of the Backward probability
+
 	let obSequence = ['T','C','G','G','A']; 
 
     let forwardProbability = HMModel.forwardAlgorithm(obSequence);
-	console.log(forwardProbability); // 0.00025390761718750005
+	console.log(forwardProbability.alphaF); // 0.00025390761718750005
 
 	let backwardProbability = HMModel.backwardAlgorithm(obSequence);
-	console.log(backwardProbability); // 0.00025390761718750001
+	console.log(backwardProbability.betaF); // 0.00025390761718750001
 
   
 ### Hidden Markov Model: Viterbi Algorithm (Problem 2: Decoding)
@@ -148,6 +156,21 @@ The viterbiAlgorithm() function returns an object with the following properties:
 So, 
 
     console.log(viterbiResult.states) //[ 'AT-rich', 'AT-rich', 'AT-rich', 'AT-rich', 'CG-rich', 'CG-rich', ... ] 
+
+
+### Hidden Markov Model: Baum-Welch Algorithm (Problem 3: Learning)
+
+To adjust the model parameters (A,B,π) to maximize the probability of the observation sequence given the model λ, we use what is called the Baum-Welch algorithm, or forward-backward algorithm, a special case of the EM (Expectation-Maximization) algorithm.
+
+The function in this package is called baumWelchAlgorithm() and requires an observation sequence as sole parameter.
+This trains and adapts the current Hidden Markov Model and provides a new model λ' = (A',B',π').
+
+	let obSequence = ['A', 'T', 'C', 'G', 'C', 'G', 'T', 'C', 'A', 'T', 'C', 'G', 'T', 'C', 'G', 'T', 'C', 'C', 'G']; 
+	let maximizedModel = HMModel.baumWelchAlgorithm(obSequence);
+
+The function returns an HMM object with the initialProb, transMatrix, emissionMatrix properties updated with the values found by the algorithm.
+
+	console.log(maximizedModel.transMatrix);  //[ [ 0.7846675069960494, 0.21533249300395071 ],[ 0.08940122820877833, 0.9105987717912215 ] ]
 
 
 ### Hidden Markov Model properties
