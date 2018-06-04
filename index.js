@@ -10,6 +10,14 @@ const findIndex = (arr, el) => {
     return arr.indexOf(el);
 };
 
+const gamma = (alpha,beta,forward) => {
+    return (alpha*beta)/forward;
+};
+
+const xi = (alpha, trans, emiss, beta, forward) => {
+    return (alpha*trans*emiss*beta)/forward;
+}
+
 const calculateProb = (stateTrans2, init, states) => ({
     sequenceProb : (sequence) => {
         return findSequence(sequence, states) 
@@ -37,12 +45,11 @@ const Bayes = (hmm) => ({
     }
 });
 
-// Comments similar to Viterbi function
 const Forward = (hmm) => ({
     forwardAlgorithm : function(obSequence) {
         let initAlphas = this.initForward(obSequence);
         let allAlphas = this.recForward(obSequence, initAlphas, 1, [initAlphas]);
-        return this.termForward(allAlphas);
+        return {alphas: allAlphas, alphaF : this.termForward(allAlphas)};
     },
 
     initForward : function(obSequence) {
@@ -82,7 +89,7 @@ const Backward = (hmm) => ({
     backwardAlgorithm : function(obSequence) {
         let initBetas = hmm.states.map(s => 1);
         let allBetas = this.recBackward(obSequence, initBetas, obSequence.length-1, [initBetas]);
-        return this.termBackward(obSequence, allBetas);
+        return {betas: allBetas, betaF:this.termBackward(obSequence, allBetas)};
     },   
     recBackward : function(obSequence, prevBetas, i, betas) {   
         let obIndex = i;        
@@ -112,6 +119,101 @@ const Backward = (hmm) => ({
     }
 });
 
+const EM = (hmm, forwardObj, backwardBetas, obSequence) => ({
+    initialGamma : (stateI) => {
+        return gamma(forwardObj.alphas[0][stateI], backwardBetas[0][stateI], forwardObj.alphaF);
+    },
+
+    gammaTimesInState : (stateI) => {        
+        let gammas = [];
+        for ( let t = 0; t < obSequence.length; t++) {
+            gammas.push(gamma(forwardObj.alphas[t][stateI], backwardBetas[t][stateI], forwardObj.alphaF));
+        };
+        return gammas.reduce((tot,curr) => tot+curr);
+    },
+
+    gammaTransFromState : (stateI) => {        
+        let gammas = [];
+        for ( let t = 0; t < (obSequence.length-1); t++) {
+            gammas.push(gamma(forwardObj.alphas[t][stateI], backwardBetas[t][stateI], forwardObj.alphaF));
+        };
+        return gammas.reduce((tot,curr) => tot+curr);
+    },
+
+    xiTransFromTo : (stateI, stateJ) => {       
+        let xis = [];
+        for ( let t = 0; t < (obSequence.length-1); t++) {
+            let alpha = forwardObj.alphas[t][stateI];
+            let trans = hmm.transMatrix[stateI][stateJ];
+            let emiss = hmm.emissionMatrix[findIndex(hmm.observables, obSequence[t+1])][stateJ];            
+            let beta = backwardBetas[t+1][stateJ];
+            xis.push(xi(alpha,trans,emiss,beta,forwardObj.alphaF));
+        };
+        return xis.reduce((tot,curr) => tot+curr);
+    },
+
+    gammaTimesInStateWithOb : (stateI, obIndex) => {
+        let obsK = hmm.observables[obIndex];
+        let stepsWithOb = obSequence.reduce((tot,curr,i)=> {
+            if (curr === obsK) tot.push(i);
+            return tot;
+        },[]);
+        
+        let gammas = [];
+        stepsWithOb.forEach( step => {
+            gammas.push(gamma(forwardObj.alphas[step][stateI], backwardBetas[step][stateI], forwardObj.alphaF));
+        });    
+        return gammas.reduce((tot,curr) => tot+curr);
+    }
+});
+
+const BaumWelch = (hmm) => ({
+
+    baumWelchAlgorithm : (obSequence) => {
+        let forwardObj = Forward(hmm).forwardAlgorithm(obSequence);
+        let backwardBetas = Backward(hmm).backwardAlgorithm(obSequence).betas.reverse();
+
+        let EMSteps = EM(hmm, forwardObj, backwardBetas, obSequence);
+
+        let initProb = [];
+        let transMatrix = [];
+        let emissMatrix = [];
+
+        for (let i = 0; i< hmm.states.length; i++) {
+            initProb.push(EMSteps.initialGamma(i));
+            let stateTrans = [];
+            for (let j = 0; j< hmm.states.length; j++) {
+                stateTrans.push(EMSteps.xiTransFromTo(i,j)/ EMSteps.gammaTransFromState(i));
+            };
+            transMatrix.push(stateTrans);
+        };
+
+        for (let o = 0; o < hmm.observables.length; o++) {
+            let obsEmiss = [];
+            for (let i = 0; i< hmm.states.length; i++) {
+                obsEmiss.push(EMSteps.gammaTimesInStateWithOb(i,o)/ EMSteps.gammaTimesInState(i));
+            };
+            emissMatrix.push(obsEmiss);
+        };
+
+        let hiddenStates = transMatrix
+        .reduce((tot,curr,i) => {
+            let stateObj = {state: hmm.states[i], prob: curr}
+            tot.push(stateObj);
+            return tot;
+        }, []);
+
+        let observables = emissMatrix
+        .reduce((tot,curr,i) => {
+            let obsObj = {obs:hmm.observables[i], prob:curr};
+            tot.push(obsObj);
+            return tot;
+        }, []);
+
+        return HMM(hiddenStates, observables, initProb);
+    }
+    
+});
 
 const Viterbi = (hmm) => ({
 
@@ -217,7 +319,7 @@ const HMM = (states, observables, init) => {
         observables : observables.map( o => o.obs ),
         emissionMatrix : observables.map(o => o.prob)     
     }     
-    return Object.assign({}, hmm, Bayes(hmm), Viterbi(hmm), Forward(hmm), Backward(hmm))
+    return Object.assign({}, hmm, Bayes(hmm), Viterbi(hmm), Forward(hmm), Backward(hmm), BaumWelch(hmm))
 };
 
 exports.MarkovChain = MarkovChain;
