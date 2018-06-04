@@ -82,9 +82,9 @@ The prob property is the array representing the corresponding line of the matrix
 The observables array is similar to the hiddenStates array.
 Given a series of observables **O = { 'A', 'C', 'G', 'T' }** the emission probabilities would be represented in the matrix:
 
-		| 0.4  0.1 0.1 0.4 	|
-	B =	|                  	|
-		| 0.05 0.4 0.4 0.05	|
+		| 0.4  0.1  0.1  0.4  |
+	B =	|                     |
+		| 0.05 0.45 0.45 0.05 |
 
 (represents the emission probabilities of the observables A, C, G, T given the hidden states AT-rich and CG-rich)
 
@@ -92,8 +92,8 @@ In the program the observables would be instantiated as:
 
     let observables = [    
 	    {obs: 'A', prob: [0.4, 0.05]},    
-	    {obs: 'C', prob: [0.1, 0.4]},    
-	    {obs: 'G', prob: [0.1, 0.4]},    
+	    {obs: 'C', prob: [0.1, 0.45]},    
+	    {obs: 'G', prob: [0.1, 0.45]},    
 	    {obs: 'T', prob: [0.4, 0.05]}    
     ];
 
@@ -134,10 +134,10 @@ So,
 	let obSequence = ['T','C','G','G','A']; 
 
     let forwardProbability = HMModel.forwardAlgorithm(obSequence);
-	console.log(forwardProbability.alphaF); // 0.00025390761718750005
+	console.log(forwardProbability.alphaF); // 0.0003171642187500001
 
 	let backwardProbability = HMModel.backwardAlgorithm(obSequence);
-	console.log(backwardProbability.betaF); // 0.00025390761718750001
+	console.log(backwardProbability.betaF); // 0.0003171642187500001
 
   
 ### Hidden Markov Model: Viterbi Algorithm (Problem 2: Decoding)
@@ -157,7 +157,7 @@ The viterbiAlgorithm() function returns an object with the following properties:
 
 So, 
 
-    console.log(viterbiResult.states) //[ 'AT-rich', 'AT-rich', 'AT-rich', 'AT-rich', 'CG-rich', 'CG-rich', ... ] 
+    console.log(viterbiResult.states) //[ 'AT-rich', 'AT-rich', 'AT-rich', 'CG-rich', 'CG-rich', 'CG-rich', ... ] 
 
 
 ### Hidden Markov Model: Baum-Welch Algorithm (Problem 3: Learning)
@@ -172,7 +172,7 @@ This trains and adapts the current Hidden Markov Model and provides a new model 
 
 The function returns an HMM object with the initialProb, transMatrix, emissionMatrix properties updated with the values found by the algorithm.
 
-	console.log(maximizedModel.transMatrix);  //[ [ 0.7846675069960494, 0.21533249300395071 ],[ 0.08940122820877833, 0.9105987717912215 ] ]
+	console.log(maximizedModel.transMatrix);  //[ [ 0.748722257770877, 0.251277742229123 ], [ 0.08173322039272721, 0.9182667796072727 ] ]
 
 
 ### Hidden Markov Model properties

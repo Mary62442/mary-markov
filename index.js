@@ -304,6 +304,7 @@ const HMM = (states, observables, init) => {
     return Object.assign({}, hmm, Bayes(hmm), Viterbi(hmm), Forward(hmm), Backward(hmm), BaumWelch(hmm))
 };
 
+
 exports.MarkovChain = MarkovChain;
 exports.HMM = HMM;
 
