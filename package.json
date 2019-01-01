@@ -13,12 +13,18 @@
   "keywords": [
     "markov",
     "probability",
-    "viterbi",
+    "viterbi algorithm",
     "bayes",
     "hidden markov model",
-    "markov chain"
+    "markov chain",
+    "forward algorithm",
+    "backward algorithm",
+    "baum-welch algorithm",
+    "forward-backward algorithm",
+    "artificial intelligence",
+    "machine learning"
   ],
-  "author": "Maria Burlando <maria.bu62442@gmail.com> (https://diegomary.github.io/#/)",
+  "author": "Maria Burlando <maria.bu62442@gmail.com> (https://dm88.cloud)",
   "homepage": "https://github.com/Mary62442/mary-markov",
   "license": "ISC"
 }

@@ -6,10 +6,6 @@ const findSequence = (sequence, states) => {
     }, [])
 };
 
-const findIndex = (arr, el) => {
-    return arr.indexOf(el);
-};
-
 const gamma = (alpha,beta,forward) => {
     return (alpha*beta)/forward;
 };
@@ -31,12 +27,11 @@ const calculateProb = (stateTrans2, init, states) => ({
 const forwardFactory = (hmm,obSequence) => ({
     initForward : () => {
         let initTrellis = [];
-        let obIndex = findIndex(hmm.observables, obSequence[0]);
+        let obIndex = hmm.observables.indexOf(obSequence[0]);
         let obEmission = hmm.emissionMatrix[obIndex];  
         hmm.initialProb.forEach((p,i) => {
             initTrellis.push(p*obEmission[i]);
         });
-
         return initTrellis;
     },
     recForward : function(prevTrellis, i, alphas) {   
@@ -47,16 +42,14 @@ const forwardFactory = (hmm,obSequence) => ({
             let trellisArr = [];
             prevTrellis.forEach((prob, i) => {
                 let trans = hmm.transMatrix[i][s];
-                let emiss = hmm.emissionMatrix[findIndex(hmm.observables, obSequence[obIndex])][s];                
+                let emiss = hmm.emissionMatrix[hmm.observables.indexOf(obSequence[obIndex])][s];                
                 trellisArr.push(prob*trans*emiss);
             });              
             nextTrellis.push(trellisArr.reduce((tot,curr) => tot+curr));
         };      
         alphas.push(nextTrellis);
-
         return this.recForward(nextTrellis, obIndex+1, alphas);
     },
-
     termForward : (alphas) => {
         return alphas[alphas.length-1].reduce((tot,val) => tot+val);
     }
@@ -71,24 +64,22 @@ const backwardFactory = (hmm,obSequence) => ({
             let trellisArr = [];
             prevBetas.forEach((prob, i) => {
                 let trans = hmm.transMatrix[s][i];
-                let emiss = hmm.emissionMatrix[findIndex(hmm.observables, obSequence[obIndex])][i];                
+                let emiss = hmm.emissionMatrix[hmm.observables.indexOf(obSequence[obIndex])][i];                
                 trellisArr.push(prob*trans*emiss);
             });              
             nextTrellis.push(trellisArr.reduce((tot,curr) => tot+curr));
         };      
         betas.push(nextTrellis);
-
         return this.recBackward(nextTrellis, obIndex-1, betas);
     },
 
     termBackward : (betas) => {
         let finalBetas = betas[betas.length-1].reduce((tot,curr,i) => {
-            let obIndex = findIndex(hmm.observables, obSequence[0]);
+            let obIndex = hmm.observables.indexOf(obSequence[0]);
             let obEmission = hmm.emissionMatrix[obIndex];  
             tot.push(curr*hmm.initialProb[i]*obEmission[i]);
             return tot;
         },[]);
-
         return finalBetas.reduce((tot,val) => tot+val);
     }
 });
@@ -103,7 +94,6 @@ const EM = (hmm, forwardObj, backwardBetas, obSequence) => ({
         for ( let t = 0; t < obSequence.length; t++) {
             gammas.push(gamma(forwardObj.alphas[t][stateI], backwardBetas[t][stateI], forwardObj.alphaF));
         };
-
         return gammas.reduce((tot,curr) => tot+curr);
     },
 
@@ -112,7 +102,6 @@ const EM = (hmm, forwardObj, backwardBetas, obSequence) => ({
         for ( let t = 0; t < (obSequence.length-1); t++) {
             gammas.push(gamma(forwardObj.alphas[t][stateI], backwardBetas[t][stateI], forwardObj.alphaF));
         };
-
         return gammas.reduce((tot,curr) => tot+curr);
     },
 
@@ -121,11 +110,10 @@ const EM = (hmm, forwardObj, backwardBetas, obSequence) => ({
         for ( let t = 0; t < (obSequence.length-1); t++) {
             let alpha = forwardObj.alphas[t][stateI];
             let trans = hmm.transMatrix[stateI][stateJ];
-            let emiss = hmm.emissionMatrix[findIndex(hmm.observables, obSequence[t+1])][stateJ];            
+            let emiss = hmm.emissionMatrix[hmm.observables.indexOf(obSequence[t+1])][stateJ];            
             let beta = backwardBetas[t+1][stateJ];
             xis.push(xi(alpha,trans,emiss,beta,forwardObj.alphaF));
         };
-
         return xis.reduce((tot,curr) => tot+curr);
     },
 
@@ -134,65 +122,76 @@ const EM = (hmm, forwardObj, backwardBetas, obSequence) => ({
         let stepsWithOb = obSequence.reduce((tot,curr,i)=> {
             if (curr === obsK) tot.push(i);
             return tot;
-        },[]);
-        
+        },[]);        
         let gammas = [];
         stepsWithOb.forEach( step => {
             gammas.push(gamma(forwardObj.alphas[step][stateI], backwardBetas[step][stateI], forwardObj.alphaF));
         });  
-
         return gammas.reduce((tot,curr) => tot+curr);
     }
 });
 
 const viterbiFactory = (hmm, obSequence) => ({
-    firstTrellis : () => {
-        let trellis1 = [];       
-        let obIndex = findIndex(hmm.observables, obSequence[0]);
-        let obEmission = hmm.emissionMatrix[obIndex];
+	initViterbi : () => {
+		let initTrellis = [];
+        let obIndex = hmm.observables.indexOf(obSequence[0]);
+        let obEmission = hmm.emissionMatrix[obIndex];  
         hmm.initialProb.forEach((p,i) => {
-            trellis1.push(p*obEmission[i]);
+            initTrellis.push(p*obEmission[i]);
         });
-
-        return trellis1;
+        return initTrellis;
+	},
+	recViterbi : function(prevTrellis, obIndex, psiArrays, trellisSequence)  {
+        if (obIndex === obSequence.length) return {psiArrays, trellisSequence};  
+        let nextTrellis = hmm.states.map((state,stateIndex) => {
+            let trellisArr = prevTrellis.map((prob,i) => {
+                let trans = hmm.transMatrix[i][stateIndex];
+                let emiss = hmm.emissionMatrix[hmm.observables.indexOf(obSequence[obIndex])][stateIndex];
+                return prob*trans*emiss;
+            })
+            let maximized = Math.max(...trellisArr);   
+            psiArrays[stateIndex].push(trellisArr.indexOf(maximized));   
+            return maximized;
+        }, []);
+        trellisSequence.push(nextTrellis);
+        return  this.recViterbi(nextTrellis, obIndex+1, psiArrays, trellisSequence);
     },
-
-    nextTrellis : function(prevTrellis, i, sSequence) {   
-        let obIndex = i;
-
-        if (obIndex === obSequence.length) return sSequence;  
-
-        let nextTrellis = [];
-        for (let s = 0; s < hmm.states.length; s++) {
-            let trellisArr = [];
-            prevTrellis.forEach((prob, i) => {
-                let trans = hmm.transMatrix[i][s];
-                let emiss = hmm.emissionMatrix[findIndex(hmm.observables, obSequence[obIndex])][s];
-                trellisArr.push(prob*trans*emiss);
-            });              
-            nextTrellis.push(Math.max(...trellisArr));
-        };
-
-        let highestTrellis = {prob: Math.max(...nextTrellis), index: findIndex(nextTrellis, Math.max(...nextTrellis)) };
-        sSequence.push(highestTrellis);
-
-        return this.nextTrellis(nextTrellis, obIndex+1, sSequence);
+	termViterbi : (recTrellisPsi) => {
+        let finalTrellis = recTrellisPsi.trellisSequence[recTrellisPsi.trellisSequence.length-1]
+        let maximizedProbability = Math.max(...finalTrellis);
+        recTrellisPsi.psiArrays.forEach(psiArr => {
+            psiArr.push(finalTrellis.indexOf(maximizedProbability)); 
+        });        
+        return {maximizedProbability, psiArrays:recTrellisPsi.psiArrays};     
+    },
+	backViterbi : (psiArrays) => {
+        let backtraceObj = obSequence.reduce(( acc, currS, i) => {  
+            if (acc.length === 0) {                
+                let finalPsiIndex = psiArrays[0].length-1;
+                let finalPsi = psiArrays[0][finalPsiIndex];
+                acc.push({psi:finalPsi, index:finalPsiIndex});
+                return acc;
+            }                
+            let prevPsi = acc[acc.length-1];
+            let psi = psiArrays[prevPsi.psi][prevPsi.index-1];
+            acc.push({psi, index:prevPsi.index-1});
+            return acc;
+        },[])
+        return backtraceObj.reverse().map(e => hmm.states[e.psi]);       
     }
 });
 
 const Bayes = (hmm) => ({
     bayesTheorem : (ob, hState) => {
-        let hStateIndex = findIndex(hmm.states, hState);
-        let obIndex = findIndex(hmm.observables, ob);
+        let hStateIndex = hmm.states.indexOf(hState);
+        let obIndex = hmm.observables.indexOf(ob);
         let emissionProb = hmm.emissionMatrix[obIndex][hStateIndex];
         let initHState = hmm.initialProb[hStateIndex];
-
         let obProb = hmm.emissionMatrix[obIndex].reduce((total, em, i) => {
             total += (em*hmm.initialProb[i]);
             return total;
         }, 0);
         let bayesResult = (emissionProb*initHState)/obProb;
-
         return bayesResult;
     }
 });
@@ -202,7 +201,6 @@ const Forward = (hmm) => ({
         let forward = forwardFactory(hmm, obSequence);
         let initAlphas = forward.initForward();
         let allAlphas = forward.recForward(initAlphas, 1, [initAlphas]);
-
         return {alphas: allAlphas, alphaF : forward.termForward(allAlphas)};
     }   
 });
@@ -212,42 +210,30 @@ const Backward = (hmm) => ({
         let backward = backwardFactory(hmm, obSequence);
         let initBetas = hmm.states.map(s => 1);
         let allBetas = backward.recBackward(initBetas, obSequence.length-1, [initBetas]);
-
         return {betas: allBetas, betaF:backward.termBackward(allBetas)};
     }    
 });
 
 const Viterbi = (hmm) => ({
-    viterbiAlgorithm : function(obSequence) {
-        let viterbi = viterbiFactory(hmm,obSequence);
-        let trellis1 = viterbi.firstTrellis();
-        let firstState = {prob: Math.max(...trellis1), index: findIndex(trellis1, Math.max(...trellis1))};
-        let stateSequenceObj = viterbi.nextTrellis(trellis1, 1, [firstState]);
-
-        let highestProb = stateSequenceObj.reduce((total, curr, i, arr) => {
-            if ( i === 0) total+=curr.prob;
-            else total*=curr.prob;            
-            return total;
-        }, 0);
-
-        let stateSequence = stateSequenceObj.map((s,i) => hmm.states[s.index] )
-
-        return {states: stateSequence, prob:highestProb, statesTrellis: stateSequenceObj.map(s => s.prob)};
+    viterbiAlgorithm : function(obSequence) {    	
+        let viterbi = viterbiFactory(hmm, obSequence);
+        let initTrellis = viterbi.initViterbi();
+        let psiArrays = hmm.states.map(s => [null]); // Initialization of psi arrays is equal to 0, but I use null because 0 could later represent a state index
+        let recTrellisPsi = viterbi.recViterbi(initTrellis, 1, psiArrays, [initTrellis]);
+        let pTerm = viterbi.termViterbi(recTrellisPsi);
+        let backtrace = viterbi.backViterbi(pTerm.psiArrays);       
+        return {stateSequence:backtrace, trellisSequence:recTrellisPsi.trellisSequence, terminationProbability:pTerm.maximizedProbability};
     }    
 });
 
 const BaumWelch = (hmm) => ({
-
     baumWelchAlgorithm : (obSequence) => {
         let forwardObj = Forward(hmm).forwardAlgorithm(obSequence);
         let backwardBetas = Backward(hmm).backwardAlgorithm(obSequence).betas.reverse();
-
         let EMSteps = EM(hmm, forwardObj, backwardBetas, obSequence);
-
         let initProb = [];
         let transMatrix = [];
         let emissMatrix = [];
-
         for (let i = 0; i< hmm.states.length; i++) {
             initProb.push(EMSteps.initialGamma(i));
             let stateTrans = [];
@@ -256,7 +242,6 @@ const BaumWelch = (hmm) => ({
             };
             transMatrix.push(stateTrans);
         };
-
         for (let o = 0; o < hmm.observables.length; o++) {
             let obsEmiss = [];
             for (let i = 0; i< hmm.states.length; i++) {
@@ -264,24 +249,20 @@ const BaumWelch = (hmm) => ({
             };
             emissMatrix.push(obsEmiss);
         };
-
         let hiddenStates = transMatrix
         .reduce((tot,curr,i) => {
             let stateObj = {state: hmm.states[i], prob: curr}
             tot.push(stateObj);
             return tot;
         }, []);
-
         let observables = emissMatrix
         .reduce((tot,curr,i) => {
             let obsObj = {obs:hmm.observables[i], prob:curr};
             tot.push(obsObj);
             return tot;
         }, []);
-
         return HMM(hiddenStates, observables, initProb);
-    }
-    
+    }    
 });
 
 const MarkovChain = (states, init) => {

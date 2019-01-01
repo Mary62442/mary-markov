@@ -1,3 +1,8 @@
+[![npm package](https://nodei.co/npm/mary-markov.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/request/)
+
+[![npm version](https://img.shields.io/npm/v/mary-markov.svg?style=for-the-badge)](https://www.npmjs.com/package/mary-markov) [![](https://img.shields.io/npm/dt/mary-markov.svg?style=for-the-badge)](https://www.npmjs.com/package/mary-markov) ![](https://img.shields.io/bundlephobia/min/mary-markov.svg?style=for-the-badge)  [![](https://img.shields.io/github/followers/Mary62442.svg?label=Follow&style=for-the-badge)](https://github.com/Mary62442/)
+
+
 # mary-markov
 
 ## An npm package to calculate probabilities from Markov Chains and Hidden Markov Models
@@ -149,15 +154,15 @@ To calculate the most likely sequence of hidden states given a specific sequence
 
 The viterbiAlgorithm() function returns an object with the following properties:
 
-* states : the array of the hidden state sequence found
+* stateSequence : the array of the hidden state sequence found through the backtracking step.
 
-* prob : the resulting highest probability of the states sequence
+* trellisSequence : an array of the trellis values at each time t of the hidden states. 
 
-* statesTrellis : an array of the trellis values of each state of the sequence. 
+* terminationProbability : is the probability of the entire state sequence up to point T + 1 having been produced given the observation and the HMM’s parameters. 
 
 So, 
 
-    console.log(viterbiResult.states) //[ 'AT-rich', 'AT-rich', 'AT-rich', 'CG-rich', 'CG-rich', 'CG-rich', ... ] 
+    console.log(viterbiResult.stateSequence) //[ 'AT-rich', 'AT-rich', 'CG-rich', 'CG-rich', 'CG-rich', ... ] 
 
 
 ### Hidden Markov Model: Baum-Welch Algorithm (Problem 3: Learning)
